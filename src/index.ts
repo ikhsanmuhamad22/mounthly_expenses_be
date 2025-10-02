@@ -1,11 +1,12 @@
-const express = require("express");
+import express from "express";
+import cors from "cors";
+import transactionRoutes from "./routes/transaction.routes";
+
 const app = express();
-const port = 3000;
+app.use(cors());
+app.use(express.json());
 
-app.get("/", (req: any, res: any) => {
-  res.send("Hello World!");
-});
+app.use("/api/transactions", transactionRoutes);
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
