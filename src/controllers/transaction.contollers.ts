@@ -1,25 +1,29 @@
-import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { Router } from "express";
+import prisma from "../prismaClient";
+import { authMiddleware, AuthRequest } from "../middleware/auth";
 
-const prisma = new PrismaClient();
+const router = Router();
 
-export const getTransactions = async (req: Request, res: Response) => {
-  try {
-    const transactions = await prisma.transaction.findMany();
-    res.json(transactions);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch transactions" });
-  }
-};
+// hanya bisa diakses jika login
+router.get("/", authMiddleware, async (req: AuthRequest, res) => {
+  const transactions = await prisma.transaction.findMany({
+    where: { userId: req.user.userId },
+  });
+  res.json(transactions);
+});
 
-export const createTransaction = async (req: Request, res: Response) => {
-  try {
-    const { note, amount, category } = req.body;
-    const newTx = await prisma.transaction.create({
-      data: { note, amount: parseFloat(amount), category },
-    });
-    res.json(newTx);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to create transaction" });
-  }
-};
+router.post("/", authMiddleware, async (req: AuthRequest, res) => {
+  const { type, amount, note, category } = req.body;
+  const transaction = await prisma.transaction.create({
+    data: {
+      type,
+      amount,
+      note,
+      category,
+      userId: req.user.userId,
+    },
+  });
+  res.json(transaction);
+});
+
+export default router;
